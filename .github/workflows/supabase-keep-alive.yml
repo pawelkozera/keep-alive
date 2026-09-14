@@ -1,0 +1,40 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # Every day at 09:17 UTC.
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check-supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Read an active event preset
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          : "${SUPABASE_URL:?Missing SUPABASE_URL secret}"
+          : "${SUPABASE_PUBLISHABLE_KEY:?Missing SUPABASE_PUBLISHABLE_KEY secret}"
+
+          curl \
+            --fail \
+            --silent \
+            --show-error \
+            --connect-timeout 15 \
+            --max-time 60 \
+            --retry 2 \
+            --retry-delay 5 \
+            --output /dev/null \
+            --header "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            "${SUPABASE_URL%/}/rest/v1/event_types?select=code&is_active=eq.true&limit=1"
+
+          echo "Supabase read completed successfully."
