@@ -33,7 +33,10 @@ jobs:
             --max-time 60 \
             --retry 2 \
             --retry-delay 5 \
+            --request POST \
             --header "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
-            "${SUPABASE_URL%/}/rest/v1/event_types?select=code&is_active=eq.true&limit=1"
+            --header "Content-Type: application/json" \
+            --data "{\"p_start_date\":\"$(date -u +%F)\",\"p_end_date\":\"$(date -u -d tomorrow +%F)\",\"p_stream_mode\":true}" \
+            "${SUPABASE_URL%/}/rest/v1/rpc/get_calendar_events"
 
           echo "Supabase read completed successfully."
